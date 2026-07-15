@@ -1,0 +1,177 @@
+// Campus platform tables — see docs/v1.0 01 §14 / 03 §4
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  admin
+  teacher
+  student
+}
+
+model User {
+  id            String    @id @default(uuid()) @db.Uuid
+  schoolUserId  String    @unique @map("school_user_id") @db.VarChar(128)
+  username      String?   @db.VarChar(128)
+  name          String?   @db.VarChar(128)
+  email         String?   @db.VarChar(255)
+  role          UserRole
+  status        String    @default("active") @db.VarChar(32)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  lastLoginAt   DateTime? @map("last_login_at")
+
+  credentials             UserCredential[]
+  quota                   UserQuota?
+  usageLogs               UsageLog[]
+  classroomsTaught        Classroom[]              @relation("ClassroomTeacher")
+  classroomParticipations ClassroomParticipant[]
+  loginLogs               LoginLog[]
+  adminAuditLogs          AdminAuditLog[]          @relation("AdminActor")
+
+  @@map("users")
+}
+
+model UserCredential {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  authType     String   @map("auth_type") @db.VarChar(32)
+  username     String?  @db.VarChar(128)
+  passwordHash String?  @map("password_hash") @db.VarChar(255)
+  externalId   String?  @map("external_id") @db.VarChar(128)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([username])
+  @@index([externalId])
+  @@map("user_credentials")
+}
+
+model UserQuota {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @unique @map("user_id") @db.Uuid
+  quotaMonthTokens BigInt   @map("quota_month_tokens")
+  usedMonthTokens  BigInt   @default(0) @map("used_month_tokens")
+  quotaDayTokens   BigInt   @map("quota_day_tokens")
+  usedDayTokens    BigInt   @default(0) @map("used_day_tokens")
+  resetMonthAt     DateTime @map("reset_month_at")
+  resetDayAt       DateTime @map("reset_day_at")
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_quotas")
+}
+
+model UsageLog {
+  id                String   @id @default(uuid()) @db.Uuid
+  requestId         String   @unique @map("request_id") @db.VarChar(128)
+  userId            String   @map("user_id") @db.Uuid
+  role              String?  @db.VarChar(32)
+  model             String?  @db.VarChar(128)
+  actionType        String?  @map("action_type") @db.VarChar(64)
+  promptTokens      BigInt   @default(0) @map("prompt_tokens")
+  completionTokens  BigInt   @default(0) @map("completion_tokens")
+  totalTokens       BigInt   @default(0) @map("total_tokens")
+  status            String?  @db.VarChar(32)
+  errorMessage      String?  @map("error_message")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)], map: "idx_usage_logs_user_created")
+  @@index([createdAt], map: "idx_usage_logs_created")
+  @@map("usage_logs")
+}
+
+model Classroom {
+  id               String    @id @default(uuid()) @db.Uuid
+  title            String    @db.VarChar(255)
+  teacherId        String    @map("teacher_id") @db.Uuid
+  shareEnabled     Boolean   @default(true) @map("share_enabled")
+  status           String    @default("open") @db.VarChar(32)
+  contentVersion   Int       @default(0) @map("content_version")
+  contentUpdatedAt DateTime? @map("content_updated_at")
+  contentUri       String?   @map("content_uri") @db.VarChar(512)
+  tokenBudget      BigInt?   @map("token_budget")
+  tokensUsed       BigInt    @default(0) @map("tokens_used")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  teacher      User                  @relation("ClassroomTeacher", fields: [teacherId], references: [id], onDelete: Restrict)
+  participants ClassroomParticipant[]
+
+  @@index([teacherId], map: "idx_classrooms_teacher")
+  @@map("classrooms")
+}
+
+model ClassroomParticipant {
+  id          String   @id @default(uuid()) @db.Uuid
+  classroomId String   @map("classroom_id") @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  joinedAt    DateTime @default(now()) @map("joined_at")
+
+  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([classroomId, userId])
+  @@index([userId], map: "idx_participants_user")
+  @@index([classroomId], map: "idx_participants_classroom")
+  @@map("classroom_participants")
+}
+
+model Model {
+  id                  String   @id @default(uuid()) @db.Uuid
+  name                String   @db.VarChar(128)
+  provider            String   @db.VarChar(128)
+  modelId             String   @map("model_id") @db.VarChar(128)
+  enabled             Boolean  @default(true)
+  allowedRoles        String[] @map("allowed_roles")
+  maxTokensPerRequest BigInt   @map("max_tokens_per_request")
+  isDefault           Boolean  @default(false) @map("is_default")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("models")
+}
+
+model SystemSetting {
+  key       String   @id @db.VarChar(128)
+  value     String
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
+
+model LoginLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String?  @map("user_id") @db.Uuid
+  schoolUserId String?  @map("school_user_id") @db.VarChar(128)
+  ip           String?  @db.VarChar(64)
+  userAgent    String?  @map("user_agent")
+  status       String   @db.VarChar(32)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("login_logs")
+}
+
+model AdminAuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  adminUserId String   @map("admin_user_id") @db.Uuid
+  action      String   @db.VarChar(64)
+  targetType  String?  @map("target_type") @db.VarChar(32)
+  targetId    String?  @map("target_id") @db.VarChar(128)
+  detail      Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  admin User @relation("AdminActor", fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@map("admin_audit_logs")
+}

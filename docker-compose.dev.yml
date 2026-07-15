@@ -1,0 +1,45 @@
+# Local development dependencies only (PostgreSQL / optional Redis).
+# OpenMAIC itself runs on the host via `pnpm dev` — do not use this file to
+# containerize the app. Production deploy does not use Docker (see docs/v1.0).
+#
+# Start PostgreSQL:
+#   docker compose -f docker-compose.dev.yml up -d
+#
+# Optionally start Redis (P4 quota / rate-limit):
+#   docker compose -f docker-compose.dev.yml --profile redis up -d
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: openmaic-postgres
+    ports:
+      - '15432:5432'
+    environment:
+      POSTGRES_USER: openmaic
+      POSTGRES_PASSWORD: openmaic_dev
+      POSTGRES_DB: openmaic
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U openmaic -d openmaic']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    container_name: openmaic-redis
+    profiles: ['redis']
+    ports:
+      - '16379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
+  redis_data:
