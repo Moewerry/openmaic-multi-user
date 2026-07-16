@@ -51,7 +51,19 @@
     "exportFailed": "导出失败",
     "classroomZip": "导出课堂 ZIP",
     "classroomZipDesc": "课程结构 + 媒体文件",
-    "inlinePartial": "{{count}} 个外部资源未能打包，离线时课程可能无法正常显示。"
+    "inlinePartial": "{{count}} 个外部资源未能打包，离线时课程可能无法正常显示。",
+    "video": "导出视频",
+    "videoDesc": "自包含 Hyperframes 工程（可渲染为 MP4）",
+    "videoNoScenes": "没有可导出的场景。",
+    "videoCompiling": "正在编译视频时间线...",
+    "videoRendering": "正在渲染幻灯片并收集素材...",
+    "videoPackaging": "正在打包视频工程...",
+    "videoSuccess": "视频工程已导出",
+    "videoFailed": "视频导出失败",
+    "videoWarnings": "有 {{assets}} 个素材缺失，导出报告中有 {{diagnostics}} 个问题。",
+    "noSlides": "无可导出的幻灯片",
+    "noSlidesSkipped": "本课程无幻灯片，已跳过 PPTX",
+    "nothingToExport": "没有可导出的内容"
   },
   "import": {
     "classroom": "导入课堂",
@@ -334,6 +346,10 @@
         "fixHtml": {
           "label": "修复互动页的 bug",
           "examples": "“开始按钮点了没反应”、“手机上排版重叠”"
+        },
+        "elements": {
+          "label": "微调页面元素",
+          "examples": "“把标题改成蓝色并上移一点”、“把这个图缩小”"
         }
       },
       "newConversation": "新对话",
@@ -428,6 +444,14 @@
       "reading": "读取中",
       "done": "已读取",
       "failed": "未读取"
+    },
+    "editElements": {
+      "title": "编辑元素",
+      "editing": "编辑中",
+      "applied": "已应用",
+      "notApplied": "未应用",
+      "applyFailed": "编辑器无法应用元素修改，未更改任何内容。",
+      "applyPartiallyFailed": "编辑器未能应用一项或多项元素修改，其他修改可能已应用。"
     }
   },
   "classroomComplete": {
@@ -939,7 +963,8 @@
     "webSearchingDesc": "正在搜索网络获取最新资料",
     "webSearchFailed": "网络搜索失败",
     "outlinesReadyCount": "{{ready}} / {{total}} 章节就绪",
-    "jumpToBlankTitle": "跳到待补充标题的章节"
+    "jumpToBlankTitle": "跳到待补充标题的章节",
+    "analyzingMediaMaterial": "解析音视频内容"
   },
   "settings": {
     "title": "设置",
@@ -1634,7 +1659,9 @@
       "capabilities": "套餐提供的能力",
       "offeredNote": "套餐提供的模型清单。请在生成界面选择需要使用的模型——是否可用取决于你的套餐档位，不支持的模型会在生成时报错。"
     },
-    "ttsBrowserNativeTimelineNotice": "浏览器内置 TTS 不支持编辑器时间轴的音频功能（试听、重新生成、全部配音）。切换到托管 TTS 提供方即可逐句生成和管理音频。"
+    "ttsBrowserNativeTimelineNotice": "浏览器内置 TTS 不支持编辑器时间轴的音频功能（试听、重新生成、全部配音）。切换到托管 TTS 提供方即可逐句生成和管理音频。",
+    "alidocmindAccessKeyId": "AccessKey ID",
+    "alidocmindAccessKeySecret": "AccessKey Secret"
   },
   "profile": {
     "title": "个人资料",
