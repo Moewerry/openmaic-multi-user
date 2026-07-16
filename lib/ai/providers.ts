@@ -44,6 +44,7 @@ import { findModelById } from './model-aliases';
 import { getDefaultThinkingConfig, getThinkingMode, pickThinkingBudget } from './thinking-config';
 import { createLogger } from '@/lib/logger';
 import { normalizeAzureBaseUrl } from './azure';
+import { llmFetch } from './long-timeout-fetch';
 // NOTE: Do NOT import thinking-context.ts here — it uses node:async_hooks
 // which is server-only, and this file is also used on the client via
 // settings.ts. The thinking context is read from globalThis instead
@@ -1577,7 +1578,7 @@ export function getModel(config: ModelConfig): ModelWithInfo {
               }
             }
           }
-          const response = await globalThis.fetch(url, init);
+          const response = await llmFetch(url, init);
 
           // Recover reasoning that @ai-sdk/openai's chat schema drops: rewrite
           // streamed `reasoning_content` deltas into an inline <think> block

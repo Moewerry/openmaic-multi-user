@@ -29,7 +29,7 @@ import { sortDocumentImagesForVision } from '@/lib/document/bundle';
 
 const log = createLogger('Scene Content API');
 
-export const maxDuration = 300;
+export const maxDuration = 600;
 
 export async function POST(req: NextRequest) {
   let outlineTitle: string | undefined;
