@@ -5,8 +5,8 @@ import { readSession } from './session';
 export async function getCurrentUser() {
   const session = await readSession();
   if (!session || session.revokedAt || session.expiresAt <= new Date() || session.user.status !== 'active') return null;
-  const { id, username, name, email, role, status } = session.user;
-  return { id, username, name, email, role, status };
+  const { id, schoolUserId, name, email, role, status } = session.user;
+  return { id, schoolUserId, name, email, role, status };
 }
 
 export async function requireSession() {

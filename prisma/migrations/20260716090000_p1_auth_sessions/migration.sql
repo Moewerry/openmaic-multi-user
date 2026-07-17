@@ -1,8 +1,6 @@
 -- P1 authentication: server-side sessions and credential uniqueness.
 ALTER TABLE "users" ALTER COLUMN "role" SET DEFAULT 'student';
 
-CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
-
 DROP INDEX IF EXISTS "user_credentials_username_idx";
 DROP INDEX IF EXISTS "user_credentials_external_id_idx";
 
