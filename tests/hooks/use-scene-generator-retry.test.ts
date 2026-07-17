@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import type { SceneOutline } from '@/lib/types/generation';
 
 const mocks = vi.hoisted(() => ({
@@ -74,6 +74,17 @@ function jsonResponse(status: number, body: unknown) {
 }
 
 describe('browser scene generation retry wrappers', () => {
+  let fetchSceneContent: typeof import('@/lib/hooks/use-scene-generator').fetchSceneContent;
+  let fetchSceneActions: typeof import('@/lib/hooks/use-scene-generator').fetchSceneActions;
+  let generateAndStoreTTS: typeof import('@/lib/hooks/use-scene-generator').generateAndStoreTTS;
+
+  beforeAll(async () => {
+    const mod = await import('@/lib/hooks/use-scene-generator');
+    fetchSceneContent = mod.fetchSceneContent;
+    fetchSceneActions = mod.fetchSceneActions;
+    generateAndStoreTTS = mod.generateAndStoreTTS;
+  }, 60_000);
+
   beforeEach(() => {
     mockFetch.mockReset();
     mocks.audioPut.mockReset();
@@ -102,7 +113,6 @@ describe('browser scene generation retry wrappers', () => {
   });
 
   it('retries transient scene content HTTP failures before returning success', async () => {
-    const { fetchSceneContent } = await import('@/lib/hooks/use-scene-generator');
     mockFetch
       .mockResolvedValueOnce(jsonResponse(429, { error: 'rate limited' }))
       .mockResolvedValueOnce(jsonResponse(200, { success: true, content: { elements: [] } }));
@@ -123,7 +133,6 @@ describe('browser scene generation retry wrappers', () => {
   });
 
   it('does not retry permanent scene action HTTP failures', async () => {
-    const { fetchSceneActions } = await import('@/lib/hooks/use-scene-generator');
     mockFetch.mockResolvedValue(jsonResponse(401, { error: 'unauthorized' }));
 
     const result = await fetchSceneActions(
@@ -142,7 +151,6 @@ describe('browser scene generation retry wrappers', () => {
   });
 
   it('preserves scene content error metadata for localized UI messages', async () => {
-    const { fetchSceneContent } = await import('@/lib/hooks/use-scene-generator');
     mockFetch.mockResolvedValue(
       jsonResponse(429, {
         success: false,
@@ -170,7 +178,6 @@ describe('browser scene generation retry wrappers', () => {
   });
 
   it('preserves internal scene content errors for localized fallback messages', async () => {
-    const { fetchSceneContent } = await import('@/lib/hooks/use-scene-generator');
     mockFetch.mockResolvedValue(
       jsonResponse(500, {
         success: false,
@@ -198,7 +205,6 @@ describe('browser scene generation retry wrappers', () => {
   });
 
   it('rethrows an aborted scene content request', async () => {
-    const { fetchSceneContent } = await import('@/lib/hooks/use-scene-generator');
     const abort = Object.assign(new Error('Aborted'), { name: 'AbortError' });
     mockFetch.mockRejectedValueOnce(abort);
 
@@ -219,7 +225,6 @@ describe('browser scene generation retry wrappers', () => {
   });
 
   it('rethrows an aborted scene actions request', async () => {
-    const { fetchSceneActions } = await import('@/lib/hooks/use-scene-generator');
     const abort = Object.assign(new Error('Aborted'), { name: 'AbortError' });
     mockFetch.mockRejectedValueOnce(abort);
 
@@ -240,7 +245,6 @@ describe('browser scene generation retry wrappers', () => {
   });
 
   it('retries transient TTS failures before storing audio', async () => {
-    const { generateAndStoreTTS } = await import('@/lib/hooks/use-scene-generator');
     mockFetch
       .mockResolvedValueOnce(jsonResponse(503, { error: 'provider overloaded' }))
       .mockResolvedValueOnce(

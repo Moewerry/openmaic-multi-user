@@ -1,4 +1,1 @@
-/** Keep the first visible scene responsive when an upstream provider is unhealthy. */
-export const FOREGROUND_SCENE_RETRY_OPTIONS = {
-  maxRetries: 2,
-} as const;
+export { SCENE_GENERATION_RETRY_OPTIONS as FOREGROUND_SCENE_RETRY_OPTIONS } from '@/lib/generation/scene-retry-options';

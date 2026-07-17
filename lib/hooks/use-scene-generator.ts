@@ -28,6 +28,7 @@ import {
   withGenerationRetry,
   type GenerationRetryOptions,
 } from '@/lib/generation/generation-retry';
+import { SCENE_GENERATION_RETRY_OPTIONS } from '@/lib/generation/scene-retry-options';
 
 const log = createLogger('SceneGenerator');
 
@@ -354,7 +355,13 @@ async function generateTTSForScene(
     const audioId = `tts_s${sceneOrder}_${action.id}`;
     action.audioId = audioId;
     try {
-      await generateAndStoreTTS(audioId, action.text, language, signal);
+      await generateAndStoreTTS(
+        audioId,
+        action.text,
+        language,
+        signal,
+        SCENE_GENERATION_RETRY_OPTIONS,
+      );
     } catch (error) {
       if (isAbortError(error)) throw error;
 
@@ -520,6 +527,7 @@ export function useSceneGenerator(options: UseSceneGeneratorOptions = {}) {
               languageDirective: params.languageDirective,
             },
             signal,
+            SCENE_GENERATION_RETRY_OPTIONS,
           );
 
         // Pre-warm content fetches (<= parallelConcurrency in flight), keyed by
@@ -615,6 +623,7 @@ export function useSceneGenerator(options: UseSceneGeneratorOptions = {}) {
               languageDirective: params.languageDirective,
             },
             signal,
+            SCENE_GENERATION_RETRY_OPTIONS,
           );
 
           if (actionsResult.success && actionsResult.scene) {
@@ -766,6 +775,7 @@ export function useSceneGenerator(options: UseSceneGeneratorOptions = {}) {
             languageDirective: params.languageDirective,
           },
           signal,
+          SCENE_GENERATION_RETRY_OPTIONS,
         );
 
         if (!contentResult.success || !contentResult.content) {
@@ -794,6 +804,7 @@ export function useSceneGenerator(options: UseSceneGeneratorOptions = {}) {
             languageDirective: params.languageDirective,
           },
           signal,
+          SCENE_GENERATION_RETRY_OPTIONS,
         );
 
         if (!actionsResult.success || !actionsResult.scene) {

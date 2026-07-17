@@ -19,8 +19,8 @@ model User {
   schoolUserId  String    @unique @map("school_user_id") @db.VarChar(128)
   username      String?   @db.VarChar(128)
   name          String?   @db.VarChar(128)
-  email         String?   @db.VarChar(255)
-  role          UserRole
+  email         String?   @unique @db.VarChar(255)
+  role          UserRole  @default(student)
   status        String    @default("active") @db.VarChar(32)
   createdAt     DateTime  @default(now()) @map("created_at")
   lastLoginAt   DateTime? @map("last_login_at")
@@ -32,6 +32,7 @@ model User {
   classroomParticipations ClassroomParticipant[]
   loginLogs               LoginLog[]
   adminAuditLogs          AdminAuditLog[]          @relation("AdminActor")
+  authSessions            AuthSession[]
 
   @@map("users")
 }
@@ -47,9 +48,25 @@ model UserCredential {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([username])
-  @@index([externalId])
+  @@unique([authType, username])
+  @@unique([authType, externalId])
   @@map("user_credentials")
+}
+
+model AuthSession {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  tokenHash  String    @unique @map("token_hash") @db.VarChar(64)
+  expiresAt  DateTime  @map("expires_at")
+  revokedAt  DateTime? @map("revoked_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  lastSeenAt DateTime? @map("last_seen_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("auth_sessions")
 }
 
 model UserQuota {

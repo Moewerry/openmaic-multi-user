@@ -11,6 +11,7 @@ import { I18nProvider } from '@/lib/hooks/use-i18n';
 import { Toaster } from '@/components/ui/sonner';
 import { ServerProvidersInit } from '@/components/server-providers-init';
 import { AccessCodeGuard } from '@/components/access-code-guard';
+import { AuthUserMenu } from '@/components/auth/auth-user-menu';
 
 const inter = localFont({
   src: '../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2',
@@ -38,7 +39,7 @@ export default function RootLayout({
         <ThemeProvider>
           <I18nProvider>
             <ServerProvidersInit />
-            <AccessCodeGuard>{children}</AccessCodeGuard>
+            {process.env.AUTH_PROVIDER?.toLowerCase() === 'local' ? <><AuthUserMenu />{children}</> : <AccessCodeGuard>{children}</AccessCodeGuard>}
             <Toaster position="top-center" />
           </I18nProvider>
         </ThemeProvider>

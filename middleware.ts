@@ -42,12 +42,29 @@ async function verifyToken(token: string, accessCode: string): Promise<boolean> 
 }
 
 export async function middleware(request: NextRequest) {
+  const localAuthEnabled = process.env.AUTH_PROVIDER?.trim().toLowerCase() === 'local';
+  const { pathname } = request.nextUrl;
+
+  if (localAuthEnabled) {
+    const publicPath = pathname === '/api/health' || pathname.startsWith('/api/auth/') || pathname === '/login' || pathname === '/register';
+    if (publicPath) return NextResponse.next();
+    const hasSession = !!request.cookies.get('openmaic_session')?.value;
+    if (hasSession) {
+      const sessionUrl = new URL('/api/auth/session', request.url);
+      const sessionResponse = await fetch(sessionUrl, { headers: { cookie: request.headers.get('cookie') || '' }, cache: 'no-store' });
+      const session = await sessionResponse.json().catch(() => null);
+      if (sessionResponse.ok && session?.authenticated) return NextResponse.next();
+    }
+    if (pathname.startsWith('/api/')) return NextResponse.json({ success: false, errorCode: 'AUTH_REQUIRED', error: '请先登录' }, { status: 401 });
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('returnTo', `${pathname}${request.nextUrl.search}`);
+    return NextResponse.redirect(loginUrl);
+  }
+
   const accessCode = process.env.ACCESS_CODE;
   if (!accessCode) {
     return NextResponse.next();
   }
-
-  const { pathname } = request.nextUrl;
 
   // Whitelist: access-code endpoints, health check
   if (pathname.startsWith('/api/access-code/') || pathname === '/api/health') {
